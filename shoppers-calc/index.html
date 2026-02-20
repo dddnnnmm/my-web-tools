@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoppers PC Optimum Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        input, select { width: 100%; padding: 0.65rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; outline: none; transition: all 0.2s; font-size: 0.9rem; }
+        input:focus { border-color: #ed1c24; ring: 2px ring rgba(237, 28, 36, 0.1); }
+        input[readonly] { background-color: #f8fafc; color: #64748b; cursor: not-allowed; }
+        .label-text { font-size: 0.85rem; font-weight: 700; color: #1a202c; margin-bottom: 0.3rem; display: block; }
+        .input-container { position: relative; display: flex; align-items: center; }
+        .input-prefix { position: absolute; left: 0.75rem; color: #a0aec0; font-size: 0.8rem; }
+        input.with-prefix { padding-left: 1.8rem; }
+        .section-title { font-size: 0.9rem; font-weight: 800; color: #ed1c24; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .bonus-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; animation: fadeIn 0.3s ease; }
+        .option-box { border: 2px solid #f1f5f9; padding: 0.75rem; border-radius: 1rem; cursor: pointer; transition: all 0.2s; }
+        .option-box.active { border-color: #ed1c24; background-color: #fef2f2; }
+        .lang-btn { cursor: pointer; font-size: 0.7rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 0.5rem; transition: all 0.2s; border: 1px solid #e2e8f0; }
+        .lang-btn.active { background-color: black; color: white; border-color: black; }
+        .multiplier-badge { background: #ed1c24; color: white; padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 900; transition: all 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-12 font-sans text-slate-900">
+
+<div class="max-w-md mx-auto px-4 pt-6">
+    <!-- 頁首與語言切換 -->
+    <header class="flex flex-col mb-6">
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-2xl font-black text-gray-800 tracking-tight">Shoppers <span class="text-[#ed1c24]" id="ui-title-suffix">折扣模擬器</span></h1>
+            <div class="flex gap-1">
+                <button onclick="changeLang('zh')" id="btn-zh" class="lang-btn active">繁</button>
+                <button onclick="changeLang('zh-CN')" id="btn-zh-CN" class="lang-btn">簡</button>
+                <button onclick="changeLang('en')" id="btn-en" class="lang-btn">EN</button>
+            </div>
+        </div>
+        <p id="ui-subtitle" class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">精確模擬結帳邏輯與分攤折扣</p>
+    </header>
+
+    <div class="card p-5 space-y-6">
+        <!-- 基礎資訊 (對齊優化) -->
+        <div class="grid grid-cols-2 gap-3 items-end">
+            <div>
+                <label id="ui-label-tax" class="label-text">省份 (稅率)</label>
+                <select id="taxRate">
+                    <!-- JS 生成 -->
+                </select>
+            </div>
+            <div>
+                <label id="ui-label-total" class="label-text">購物總額 (未稅)</label>
+                <div class="input-container">
+                    <span class="input-prefix">$</span>
+                    <input type="number" id="basePrice" class="with-prefix" placeholder="0.00" value="150">
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. 積分活動 -->
+        <div class="p-4 rounded-2xl bg-red-50 border border-red-100">
+            <h3 id="ui-section-earning" class="section-title">1. 積分活動</h3>
+            <div class="grid grid-cols-1 gap-2 mb-3">
+                <div id="earn-base-box" class="option-box active" onclick="setEarnType('base', this)">
+                    <div class="flex justify-between items-center">
+                        <span id="ui-earn-base" class="text-sm font-bold">沒額外分優惠</span>
+                        <span class="text-[10px] text-gray-400">15 pts / $1</span>
+                    </div>
+                </div>
+                <div id="earn-20x-box" class="option-box" onclick="setEarnType('20x', this)">
+                    <div class="flex justify-between items-center">
+                        <span id="ui-earn-20x" class="text-sm font-bold">20 倍積分 (20x)</span>
+                        <span class="text-[10px] text-red-500 font-bold">300 pts / $1</span>
+                    </div>
+                </div>
+                <div id="earn-fixed-box" class="option-box" onclick="setEarnType('fixed', this)">
+                    <div class="flex justify-between items-center">
+                        <span id="ui-earn-fixed" class="text-sm font-bold">滿額送固定分</span>
+                        <span id="ui-earn-fixed-tag" class="text-[10px] text-blue-500 font-bold">指定門檻</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fixedEarnUI" class="hidden space-y-2 mt-2 bg-white p-3 rounded-xl shadow-inner border border-red-100">
+                <select id="fixedEarnPreset" onchange="applyEarnPreset()" class="bg-gray-50">
+                    <!-- JS 生成 -->
+                </select>
+                <div class="flex gap-2">
+                    <input type="number" id="earnPts" placeholder="獲得點數" class="text-sm bg-gray-50" readonly value="10000">
+                    <input type="number" id="earnThreshold" placeholder="需滿門檻$" class="text-sm bg-gray-50" readonly value="40">
+                </div>
+            </div>
+            <input type="hidden" id="earnType" value="base">
+        </div>
+
+        <!-- 2. 額外積分 -->
+        <div class="p-4 rounded-2xl bg-blue-50 border border-blue-100">
+            <div class="flex justify-between items-center mb-2">
+                <h3 id="ui-section-bonus" class="section-title text-blue-700 mb-0">2. 額外積分</h3>
+                <button onclick="addBonusRow()" class="text-blue-600 bg-white border border-blue-200 rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-sm hover:bg-blue-600 hover:text-white transition-colors">+</button>
+            </div>
+            <div id="bonusContainer">
+                <div class="bonus-row">
+                    <input type="number" class="itemBonus bg-white" placeholder="單品加分 (pts)" value="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 積分兌換活動 -->
+        <div class="p-4 rounded-2xl bg-gray-50 border border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+                <h3 id="ui-section-redemption" class="section-title text-gray-700 mb-0">3. 積分兌換活動</h3>
+                <span id="redeemValueMultiplier" class="multiplier-badge">1.00x Value</span>
+            </div>
+            <select id="redeemType" onchange="updateRedeemUI()" class="mb-3">
+                <!-- JS 生成 -->
+            </select>
+
+            <div id="fixedRedeemUI">
+                <select id="redeemPreset" onchange="updateRedeemUI()">
+                    <!-- JS 生成 -->
+                </select>
+            </div>
+
+            <div id="customRedeemUI" class="hidden flex gap-2">
+                <input type="number" id="custRedPts" placeholder="點數" class="bg-white" oninput="updateRedeemUI()">
+                <input type="number" id="custRedVal" placeholder="抵扣$" class="bg-white" oninput="updateRedeemUI()">
+            </div>
+        </div>
+
+        <button onclick="calculate()" id="ui-calc-btn" class="w-full bg-black text-white py-4 rounded-2xl font-black text-lg shadow-xl hover:bg-red-600 transition-all active:scale-95">
+            計算折扣報告
+        </button>
+    </div>
+
+    <!-- 結果面板 -->
+    <div id="resultCard" class="card mt-6 p-6 border-2 border-red-500 hidden space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+            <h2 id="ui-report-title" class="text-xl font-black">結算總結</h2>
+            <span id="earnStatus" class="text-[10px] px-2 py-1 rounded-full font-bold"></span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-gray-50 p-3 rounded-xl">
+                <p id="ui-result-cashout" class="text-[10px] text-gray-400 font-bold uppercase">本次實付 (含稅)</p>
+                <p id="cashOut" class="text-lg font-black text-gray-800"></p>
+            </div>
+            <div class="bg-red-50 p-3 rounded-xl">
+                <p id="ui-result-pts" class="text-[10px] text-red-400 font-bold uppercase">獲得總積分</p>
+                <p id="ptsResult" class="text-lg font-black text-red-600"></p>
+            </div>
+        </div>
+
+        <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span id="ui-result-ptsval" class="text-gray-500 italic">積分可換取商品價值</span>
+                <span id="ptsValue" class="font-bold"></span>
+            </div>
+            <div class="flex justify-between">
+                <span id="ui-result-tax" class="text-gray-500 italic">換貨時需補稅</span>
+                <span id="futureTax" class="font-bold text-orange-600"></span>
+            </div>
+            <div id="pbNote" class="text-[10px] text-blue-500 hidden italic">
+                * <span id="ui-pb-note-text">已計算 Points Back 遞歸價值 (返還分再換分)</span>
+            </div>
+        </div>
+
+        <div class="bg-black text-white p-5 rounded-2xl text-center shadow-lg">
+            <p id="ui-result-final-label" class="text-[10px] opacity-60 font-bold uppercase tracking-widest mb-1">整體折合折扣 (含未來支出)</p>
+            <p class="text-4xl font-black tracking-tighter"><span id="finalDiscount"></span> <span id="ui-off-unit" class="text-lg">折</span></p>
+            <p id="ui-formula-note" class="text-[9px] mt-2 opacity-40">公式: (今天實付 + 未來補稅) / (今天商品 + 積分換得價值)</p>
+        </div>
+
+        <!-- 單件分析 -->
+        <div class="bg-gray-100 p-4 rounded-2xl border border-dashed border-gray-300">
+            <label id="ui-item-analysis" class="label-text text-gray-600 uppercase text-[10px]">單件商品折扣分攤分析</label>
+            <div class="flex gap-2">
+                <input type="number" id="checkItemPrice" placeholder="輸入商品原價" class="text-sm">
+                <button onclick="checkItem()" id="ui-item-btn" class="bg-gray-800 text-white px-4 rounded-xl text-xs font-bold whitespace-nowrap">計算</button>
+            </div>
+            <div id="checkItemResult" class="hidden mt-3 pt-3 border-t border-gray-200 space-y-1 text-sm">
+                <div class="flex justify-between"><span id="ui-ci-cash">含稅實付 (今天):</span> <span id="ciCash" class="font-bold"></span></div>
+                <div class="flex justify-between"><span id="ui-ci-value">分攤後商品總值:</span> <span id="ciPts" class="font-bold text-blue-600"></span></div>
+                <div class="flex justify-between text-base border-t border-gray-200 pt-1 mt-1"><span id="ui-ci-final">最終折合成本:</span> <span id="ciFinal" class="font-black text-red-600"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentLang = 'zh';
+    let globalDiscountRate = 1;
+
+    const translations = {
+        zh: {
+            titleSuffix: "折扣模擬器",
+            subtitle: "精確模擬結帳邏輯與分攤折扣",
+            labelTax: "省份 (稅率)",
+            labelTotal: "購物總額 (未稅)",
+            sectionEarning: "1. 積分活動",
+            earnBase: "沒額外分優惠",
+            earn20x: "20 倍積分 (20x)",
+            earnFixed: "滿額送固定分",
+            earnFixedTag: "指定門檻",
+            sectionBonus: "2. 額外積分",
+            sectionRedemption: "3. 積分兌換活動",
+            calcBtn: "計算折扣報告",
+            reportTitle: "結算總結",
+            resCashOut: "本次實付 (含稅)",
+            resPts: "獲得總積分",
+            resPtsVal: "積分可換取商品價值",
+            resTax: "換貨時需補稅",
+            pbNote: "已計算 Points Back 遞歸價值 (返還分再換分)",
+            finalLabel: "整體折合折扣 (含未來支出)",
+            offUnit: "折",
+            formulaNote: "公式: (今天實付 + 未來補稅) / (今天商品 + 積分換得價值)",
+            itemAnalysis: "單件商品折扣分攤分析",
+            itemBtn: "計算",
+            ciCash: "含稅實付 (今天):",
+            ciValue: "分攤後商品總值:",
+            ciFinal: "最終折合成本:",
+            ptsPlaceholder: "單品加分 (pts)",
+            earnApplied: "20X 已套用",
+            earnReached: "滿額分已達成",
+            earnMissed: "未達門檻!",
+            earnBaseMode: "基礎分模式",
+            custom: "自定義...",
+            threshold: "滿 ${0} 送 {1} pts",
+            redeemBase: "基本兌換 (1,000 pts = $1)",
+            redeemFixed: "固定加值兌換 (Bonus Week)",
+            redeemPB: "40% Points Back (回饋點數)",
+            redeemStep: "用 {0} pts 換 ${1}",
+            ptsUnit: "點數",
+            dollarUnit: "抵扣$"
+        },
+        'zh-CN': {
+            titleSuffix: "折扣模拟器",
+            subtitle: "精确模拟结账逻辑与分摊折扣",
+            labelTax: "省份 (税率)",
+            labelTotal: "购物总额 (未税)",
+            sectionEarning: "1. 积分活动",
+            earnBase: "无额外积分优惠",
+            earn20x: "20 倍积分 (20x)",
+            earnFixed: "满额送固定积分",
+            earnFixedTag: "指定门槛",
+            sectionBonus: "2. 额外积分",
+            sectionRedemption: "3. 积分兑换活动",
+            calcBtn: "计算折扣报告",
+            reportTitle: "结算总结",
+            resCashOut: "本次实付 (含税)",
+            resPts: "获得总积分",
+            resPtsVal: "积分可換取商品价值",
+            resTax: "换货时需補税",
+            pbNote: "已计算 Points Back 递归价值 (返还分再换分)",
+            finalLabel: "整体折合折扣 (含未来支出)",
+            offUnit: "折",
+            formulaNote: "公式: (今天实付 + 未来补税) / (今天商品 + 积分换得价值)",
+            itemAnalysis: "单品折扣分摊分析",
+            itemBtn: "计算",
+            ciCash: "含税实付 (今天):",
+            ciValue: "分摊后商品总值:",
+            ciFinal: "最终折合成本:",
+            ptsPlaceholder: "单品加分 (pts)",
+            earnApplied: "20X 已套用",
+            earnReached: "满额分已达成",
+            earnMissed: "未达门槛!",
+            earnBaseMode: "基础分模式",
+            custom: "自定义...",
+            threshold: "满 ${0} 送 {1} pts",
+            redeemBase: "基本兑换 (1,000 pts = $1)",
+            redeemFixed: "固定加值兑换 (Bonus Week)",
+            redeemPB: "40% Points Back (回馈点数)",
+            redeemStep: "用 {0} pts 换 ${1}",
+            ptsUnit: "点数",
+            dollarUnit: "$"
+        },
+        en: {
+            titleSuffix: "Savings Sim",
+            subtitle: "Precise Checkout & Point Analysis",
+            labelTax: "Province (Tax)",
+            labelTotal: "Total Purchase (Pre-tax)",
+            sectionEarning: "1. Points Strategy",
+            earnBase: "Base Earn Only",
+            earn20x: "20x Points",
+            earnFixed: "Spend & Get Points",
+            earnFixedTag: "Threshold",
+            sectionBonus: "2. Extra Points",
+            sectionRedemption: "3. Redemption Events",
+            calcBtn: "Get Summary",
+            reportTitle: "Final Summary",
+            resCashOut: "Paid Today (Inc. Tax)",
+            resPts: "Total Points Gained",
+            resPtsVal: "Future Gift Value",
+            resTax: "Future Tax to Pay",
+            pbNote: "Calculated with Points Back recursive value",
+            finalLabel: "Effective Discount (Combined)",
+            offUnit: "x Value",
+            formulaNote: "Formula: (Paid Today + Future Tax) / (Base Goods + Gift Value)",
+            itemAnalysis: "Individual Item Analysis",
+            itemBtn: "Calculate",
+            ciCash: "Today's Taxed Price:",
+            ciValue: "Eff. Total Value:",
+            ciFinal: "Real Cost:",
+            ptsPlaceholder: "Bonus pts",
+            earnApplied: "20X Applied",
+            earnReached: "Earn Goal Reached",
+            earnMissed: "Missed Goal!",
+            earnBaseMode: "Base Only",
+            custom: "Custom...",
+            threshold: "Get {1} pts on ${0}+",
+            redeemBase: "Standard (1k pts = $1)",
+            redeemFixed: "Bonus Redem Week",
+            redeemPB: "40% Points Back",
+            redeemStep: "Spend {0} pts for ${1}",
+            ptsUnit: "pts",
+            dollarUnit: "$"
+        }
+    };
+
+    function changeLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${lang}`).classList.add('active');
+        updateUI();
+        updateRedeemUI();
+    }
+
+    function updateUI() {
+        const t = translations[currentLang];
+        document.getElementById('ui-title-suffix').innerText = t.titleSuffix;
+        document.getElementById('ui-subtitle').innerText = t.subtitle;
+        document.getElementById('ui-label-tax').innerText = t.labelTax;
+        document.getElementById('ui-label-total').innerText = t.labelTotal;
+        document.getElementById('ui-section-earning').innerText = t.sectionEarning;
+        document.getElementById('ui-earn-base').innerText = t.earnBase;
+        document.getElementById('ui-earn-20x').innerText = t.earn20x;
+        document.getElementById('ui-earn-fixed').innerText = t.earnFixed;
+        document.getElementById('ui-earn-fixed-tag').innerText = t.earnFixedTag;
+        document.getElementById('ui-section-bonus').innerText = t.sectionBonus;
+        document.getElementById('ui-section-redemption').innerText = t.sectionRedemption;
+        document.getElementById('ui-calc-btn').innerText = t.calcBtn;
+        document.getElementById('ui-report-title').innerText = t.reportTitle;
+        document.getElementById('ui-result-cashout').innerText = t.resCashOut;
+        document.getElementById('ui-result-pts').innerText = t.resPts;
+        document.getElementById('ui-result-ptsval').innerText = t.resPtsVal;
+        document.getElementById('ui-result-tax').innerText = t.resTax;
+        document.getElementById('ui-pb-note-text').innerText = t.pbNote;
+        document.getElementById('ui-result-final-label').innerText = t.finalLabel;
+        document.getElementById('ui-off-unit').innerText = t.offUnit;
+        document.getElementById('ui-formula-note').innerText = t.formulaNote;
+        document.getElementById('ui-item-analysis').innerText = t.itemAnalysis;
+        document.getElementById('ui-item-btn').innerText = t.itemBtn;
+        document.getElementById('ui-ci-cash').innerText = t.ciCash;
+        document.getElementById('ui-ci-value').innerText = t.ciValue;
+        document.getElementById('ui-ci-final').innerText = t.ciFinal;
+
+        const taxRate = document.getElementById('taxRate');
+        const selectedTax = taxRate.value || "0.12";
+        taxRate.innerHTML = `
+            <option value="0.12" ${selectedTax==="0.12"?'selected':''}>BC/MB (12%)</option>
+            <option value="0.13" ${selectedTax==="0.13"?'selected':''}>ON/NB (13%)</option>
+            <option value="0.15" ${selectedTax==="0.15"?'selected':''}>NS/PEI (15%)</option>
+            <option value="0.05" ${selectedTax==="0.05"?'selected':''}>AB/SK (5%)</option>
+            <option value="0.14975" ${selectedTax==="0.14975"?'selected':''}>QC (14.975%)</option>
+        `;
+
+        const earnPreset = document.getElementById('fixedEarnPreset');
+        const selectedEarn = earnPreset.value;
+        const earnSteps = [[40, 10000], [50, 15000], [60, 20000], [75, 25000], [125, 40000], [150, 50000]];
+        earnPreset.innerHTML = earnSteps.map(s => `<option value="${s[1]},${s[0]}" ${selectedEarn === s[1]+','+s[0] ? 'selected':''}>${t.threshold.replace('{0}', s[0]).replace('{1}', s[1].toLocaleString())}</option>`).join('') + `<option value="custom" ${selectedEarn==='custom'?'selected':''}>${t.custom}</option>`;
+
+        const redeemType = document.getElementById('redeemType');
+        const selectedRedeemType = redeemType.value || "fixed";
+        redeemType.innerHTML = `
+            <option value="base" ${selectedRedeemType==="base"?'selected':''}>${t.redeemBase}</option>
+            <option value="fixed" ${selectedRedeemType==="fixed"?'selected':''}>${t.redeemFixed}</option>
+            <option value="pb40" ${selectedRedeemType==="pb40"?'selected':''}>${t.redeemPB}</option>
+            <option value="custom" ${selectedRedeemType==="custom"?'selected':''}>${t.custom}</option>
+        `;
+
+        const redeemPreset = document.getElementById('redeemPreset');
+        const selectedRedeemPreset = redeemPreset.value || "130000,200";
+        const redeemSteps = [
+            [50000, 75], [100000, 140], [130000, 200], [200000, 300], 
+            [300000, 500], [400000, 700], [500000, 900]
+        ];
+        redeemPreset.innerHTML = redeemSteps.map(s => `<option value="${s[0]},${s[1]}" ${selectedRedeemPreset === s[0]+','+s[1] ? 'selected':''}>${t.redeemStep.replace('{0}', s[0].toLocaleString()).replace('{1}', s[1])}</option>`).join('');
+
+        document.getElementById('custRedPts').placeholder = t.ptsUnit;
+        document.getElementById('custRedVal').placeholder = t.dollarUnit;
+    }
+
+    function setEarnType(type, element) {
+        document.getElementById('earnType').value = type;
+        document.querySelectorAll('.option-box').forEach(box => box.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('fixedEarnUI').classList.toggle('hidden', type !== 'fixed');
+    }
+
+    function applyEarnPreset() {
+        const val = document.getElementById('fixedEarnPreset').value;
+        const ptsInput = document.getElementById('earnPts');
+        const thresInput = document.getElementById('earnThreshold');
+        if (!val || val === 'custom') {
+            ptsInput.readOnly = false; thresInput.readOnly = false;
+            ptsInput.classList.remove('bg-gray-50'); thresInput.classList.remove('bg-gray-50');
+            return;
+        }
+        const [pts, threshold] = val.split(',');
+        ptsInput.value = pts; thresInput.value = threshold;
+        ptsInput.readOnly = true; thresInput.readOnly = true;
+        ptsInput.classList.add('bg-gray-50'); thresInput.classList.add('bg-gray-50');
+    }
+
+    function addBonusRow() {
+        const container = document.getElementById('bonusContainer');
+        const div = document.createElement('div');
+        div.className = 'bonus-row';
+        div.innerHTML = `<input type="number" class="itemBonus bg-white" placeholder="${translations[currentLang].ptsPlaceholder}" value="0">
+                         <button onclick="this.parentElement.remove()" class="text-red-400 font-bold px-2 hover:scale-125 transition-transform">×</button>`;
+        container.appendChild(div);
+    }
+
+    function updateRedeemUI() {
+        const type = document.getElementById('redeemType').value;
+        document.getElementById('fixedRedeemUI').classList.toggle('hidden', type !== 'fixed');
+        document.getElementById('customRedeemUI').classList.toggle('hidden', type !== 'custom');
+
+        let multiplier = 1.00;
+        if (type === 'fixed') {
+            const [pts, val] = document.getElementById('redeemPreset').value.split(',');
+            multiplier = (parseFloat(val) / (parseFloat(pts) / 1000));
+        } else if (type === 'pb40') {
+            multiplier = 1 / (1 - 0.4); 
+        } else if (type === 'custom') {
+            const pts = parseFloat(document.getElementById('custRedPts').value) || 1000;
+            const val = parseFloat(document.getElementById('custRedVal').value) || 1;
+            multiplier = val / (pts / 1000);
+        }
+        
+        const badge = document.getElementById('redeemValueMultiplier');
+        badge.innerText = multiplier.toFixed(2) + 'x Value';
+        
+        if (multiplier >= 1.7) badge.className = "multiplier-badge bg-red-600 ring-2 ring-red-200 ring-offset-1 animate-pulse";
+        else if (multiplier >= 1.5) badge.className = "multiplier-badge bg-green-600";
+        else if (multiplier >= 1.2) badge.className = "multiplier-badge bg-blue-600";
+        else if (multiplier > 1.01) badge.className = "multiplier-badge bg-orange-600";
+        else badge.className = "multiplier-badge bg-gray-400";
+    }
+
+    function calculate() {
+        const t = translations[currentLang];
+        const basePrice = parseFloat(document.getElementById('basePrice').value) || 0;
+        const taxRate = parseFloat(document.getElementById('taxRate').value);
+        const cashOutToday = basePrice * (1 + taxRate);
+
+        let totalPts = 0;
+        const ptsPerDollar = 15;
+        const earnType = document.getElementById('earnType').value;
+        const statusEl = document.getElementById('earnStatus');
+
+        // 積分活動邏輯
+        if (earnType === '20x') {
+            totalPts = (basePrice * ptsPerDollar) * 20; // 20x 包含基礎分 (300/$)
+            statusEl.innerText = t.earnApplied;
+            statusEl.className = "text-[10px] px-2 py-1 rounded-full font-bold bg-green-100 text-green-700";
+        } else if (earnType === 'fixed') {
+            totalPts = basePrice * ptsPerDollar;
+            const ePts = parseFloat(document.getElementById('earnPts').value) || 0;
+            const eThres = parseFloat(document.getElementById('earnThreshold').value) || 0;
+            if (basePrice >= eThres) {
+                totalPts += ePts;
+                statusEl.innerText = t.earnReached;
+                statusEl.className = "text-[10px] px-2 py-1 rounded-full font-bold bg-green-100 text-green-700";
+            } else {
+                statusEl.innerText = t.earnMissed;
+                statusEl.className = "text-[10px] px-2 py-1 rounded-full font-bold bg-red-100 text-red-700";
+            }
+        } else {
+            totalPts = basePrice * ptsPerDollar;
+            statusEl.innerText = t.earnBaseMode;
+            statusEl.className = "text-[10px] px-2 py-1 rounded-full font-bold bg-gray-100 text-gray-700";
+        }
+
+        // 單品加分
+        document.querySelectorAll('.itemBonus').forEach(b => totalPts += (parseFloat(b.value) || 0));
+
+        // 兌換價值
+        let redRate = 1000;
+        let redBonusMultiplier = 1;
+        const rType = document.getElementById('redeemType').value;
+        document.getElementById('pbNote').classList.add('hidden');
+        
+        if (rType === 'fixed') {
+            const [p, v] = document.getElementById('redeemPreset').value.split(',');
+            redRate = parseFloat(p) / parseFloat(v);
+            redBonusMultiplier = (parseFloat(v) / (parseFloat(p)/1000)).toFixed(2);
+        } else if (rType === 'pb40') {
+            redRate = 1000 * (1 - 0.4); 
+            redBonusMultiplier = 1.67;
+            document.getElementById('pbNote').classList.remove('hidden');
+        } else if (rType === 'custom') {
+            const p = parseFloat(document.getElementById('custRedPts').value) || 1000;
+            const v = parseFloat(document.getElementById('custRedVal').value) || 1;
+            redRate = p / v;
+            redBonusMultiplier = (v / (p/1000)).toFixed(2);
+        }
+
+        const ptsValue = totalPts / redRate;
+        const futureTax = ptsValue * taxRate;
+        const totalGoodsValue = basePrice + ptsValue;
+        const realTotalSpent = cashOutToday + futureTax;
+        const totalValueWithTax = totalGoodsValue * (1 + taxRate);
+        globalDiscountRate = realTotalSpent / totalValueWithTax;
+
+        document.getElementById('resultCard').classList.remove('hidden');
+        document.getElementById('cashOut').innerText = `$${cashOutToday.toFixed(2)}`;
+        document.getElementById('ptsResult').innerText = `${Math.round(totalPts).toLocaleString()} pts`;
+        document.getElementById('ptsValue').innerText = `≈ $${ptsValue.toFixed(2)} (${redBonusMultiplier}x)`;
+        document.getElementById('futureTax').innerText = `+$${futureTax.toFixed(2)}`;
+        
+        if(currentLang === 'en') {
+            document.getElementById('finalDiscount').innerText = (globalDiscountRate).toFixed(2);
+        } else {
+            document.getElementById('finalDiscount').innerText = (globalDiscountRate * 10).toFixed(1);
+        }
+    }
+
+    function checkItem() {
+        const p = parseFloat(document.getElementById('checkItemPrice').value) || 0;
+        const taxRate = parseFloat(document.getElementById('taxRate').value);
+        const cash = p * (1 + taxRate);
+        const finalCost = cash * globalDiscountRate;
+        const effectiveTotalValue = p / globalDiscountRate;
+
+        document.getElementById('checkItemResult').classList.remove('hidden');
+        document.getElementById('ciCash').innerText = `$${cash.toFixed(2)}`;
+        document.getElementById('ciPts').innerText = `$${effectiveTotalValue.toFixed(2)}`;
+        document.getElementById('ciFinal').innerText = `$${finalCost.toFixed(2)}`;
+    }
+
+    window.onload = () => {
+        updateUI();
+        updateRedeemUI();
+    };
+</script>
+
+</body>
+</html>
