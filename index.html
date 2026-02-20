@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebTools - 精選實用工具箱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans TC', 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc;
+        }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+        .btn-lang.active {
+            background-color: #1e293b;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-900">
+
+    <!-- Header / Nav -->
+    <nav class="nav-glass sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <a href="/my-web-tools/" class="text-2xl font-extrabold tracking-tight hover:opacity-80 transition-opacity">
+                WebTools<span class="text-blue-600">.</span>
+            </a>
+            
+            <!-- Language Selector -->
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-sm font-bold">
+                <button onclick="changeLang('zh-Hant')" id="lang-zh-Hant" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">繁體</button>
+                <button onclick="changeLang('zh-Hans')" id="lang-zh-Hans" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">简体</button>
+                <button onclick="changeLang('en')" id="lang-en" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">English</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-16">
+        <!-- Hero Section -->
+        <header class="mb-16">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight" data-i18n="hero-title">
+                簡單、高效的工具集
+            </h1>
+            <p class="text-lg text-slate-500 max-w-2xl leading-relaxed" data-i18n="hero-desc">
+                這裡收藏了一些為特定場景開發的小工具，旨在簡化日常計算與操作流程。
+            </p>
+        </header>
+
+        <!-- Tool Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Shoppers Calc Tool -->
+            <a href="./shoppers-calc/" class="card-hover bg-white p-8 rounded-3xl border border-slate-200 flex flex-col h-full group">
+                <div class="mb-6 w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3" data-i18n="tool1-name">Shoppers 積分折扣計算器</h3>
+                <p class="text-slate-500 text-sm leading-relaxed mb-6 flex-grow" data-i18n="tool1-desc">
+                    專為加拿大 Shoppers Drug Mart 用戶設計。快速計算在「20倍積分」或「點數加值兌換」活動下的真實折扣率與回饋價值。
+                </p>
+                <div class="flex items-center text-blue-600 font-bold text-sm">
+                    <span data-i18n="btn-open">開啟工具</span>
+                    <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+            </a>
+
+            <!-- Placeholder for future tools -->
+            <div class="border-2 border-dashed border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center text-center opacity-50">
+                <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                </div>
+                <p class="text-slate-400 font-bold" data-i18n="coming-soon">新工具開發中...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="max-w-5xl mx-auto px-6 py-12 text-center border-t border-slate-100 mt-20">
+        <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">© 2025 WebTools Project</p>
+    </footer>
+
+    <script>
+        const translations = {
+            'zh-Hant': {
+                'hero-title': '簡單、高效的工具集',
+                'hero-desc': '這裡收藏了一些為特定場景開發的小工具，旨在簡化日常計算與操作流程。',
+                'tool1-name': 'Shoppers 積分折扣計算器',
+                'tool1-desc': '專為加拿大 Shoppers Drug Mart 用戶設計。快速計算在「20倍積分」或「點數加值兌換」活動下的真實折扣率與回饋價值。',
+                'btn-open': '開啟工具',
+                'coming-soon': '新工具開發中...'
+            },
+            'zh-Hans': {
+                'hero-title': '简单、高效的工具集',
+                'hero-desc': '这里收藏了一些為特定场景开发的小工具，旨在简化日常计算与操作流程。',
+                'tool1-name': 'Shoppers 积分折扣计算器',
+                'tool1-desc': '专為加拿大 Shoppers Drug Mart 用户设计。快速计算在「20倍积分」或「点数加值兑换」活动下的真实折扣率与回馈价值。',
+                'btn-open': '开启工具',
+                'coming-soon': '新工具开发中...'
+            },
+            'en': {
+                'hero-title': 'Simple & Efficient Tools',
+                'hero-desc': 'A collection of specialized tools built for specific use cases, designed to simplify your daily routines.',
+                'tool1-name': 'Shoppers Points Calculator',
+                'tool1-desc': 'Designed for Shoppers Drug Mart (Canada). Quickly calculate real discount rates and reward values during 20x points or bonus redemption events.',
+                'btn-open': 'Open Tool',
+                'coming-soon': 'Coming Soon...'
+            }
+        };
+
+        function changeLang(lang) {
+            // 儲存語言設定
+            localStorage.setItem('preferred-lang', lang);
+            document.documentElement.lang = lang;
+
+            // 更新介面文字
+            const data = translations[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (data[key]) el.textContent = data[key];
+            });
+
+            // 更新按鈕樣式
+            document.querySelectorAll('.btn-lang').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`lang-${lang}`).classList.add('active');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('preferred-lang') || 'en';
+            changeLang(savedLang);
+        });
+    </script>
+</body>
+</html>

@@ -217,6 +217,7 @@
             formulaNote: "公式: (今天實付 + 未來補稅) / (今天商品 + 積分換得價值)",
             itemAnalysis: "單件商品折扣分攤分析",
             itemBtn: "計算",
+            itemPriceBox: "輸入商品原價",
             ciCash: "含稅實付 (今天):",
             ciValue: "分攤後商品總值:",
             ciFinal: "最終折合成本:",
@@ -258,6 +259,7 @@
             formulaNote: "公式: (今天实付 + 未来补税) / (今天商品 + 积分换得价值)",
             itemAnalysis: "单品折扣分摊分析",
             itemBtn: "计算",
+            itemPriceBox: "输入商品原价",
             ciCash: "含税实付 (今天):",
             ciValue: "分摊后商品总值:",
             ciFinal: "最终折合成本:",
@@ -273,7 +275,7 @@
             redeemPB: "40% Points Back (回馈点数)",
             redeemStep: "用 {0} pts 换 ${1}",
             ptsUnit: "点数",
-            dollarUnit: "$"
+            dollarUnit: "抵扣$"
         },
         en: {
             titleSuffix: "Savings Sim",
@@ -295,10 +297,11 @@
             resTax: "Future Tax to Pay",
             pbNote: "Calculated with Points Back recursive value",
             finalLabel: "Effective Discount (Combined)",
-            offUnit: "x Value",
+            offUnit: "% Off",
             formulaNote: "Formula: (Paid Today + Future Tax) / (Base Goods + Gift Value)",
             itemAnalysis: "Individual Item Analysis",
             itemBtn: "Calculate",
+            itemPriceBox: "Item Original Price",
             ciCash: "Today's Taxed Price:",
             ciValue: "Eff. Total Value:",
             ciFinal: "Real Cost:",
@@ -314,7 +317,7 @@
             redeemPB: "40% Points Back",
             redeemStep: "Spend {0} pts for ${1}",
             ptsUnit: "pts",
-            dollarUnit: "$"
+            dollarUnit: "Redeem value $"
         }
     };
 
@@ -354,6 +357,7 @@
         document.getElementById('ui-ci-cash').innerText = t.ciCash;
         document.getElementById('ui-ci-value').innerText = t.ciValue;
         document.getElementById('ui-ci-final').innerText = t.ciFinal;
+        document.getElementById('checkItemPrice').placeholder = t.itemPriceBox;
 
         const taxRate = document.getElementById('taxRate');
         const selectedTax = taxRate.value || "0.12";
@@ -521,7 +525,7 @@
         document.getElementById('futureTax').innerText = `+$${futureTax.toFixed(2)}`;
         
         if(currentLang === 'en') {
-            document.getElementById('finalDiscount').innerText = (globalDiscountRate).toFixed(2);
+            document.getElementById('finalDiscount').innerText = (100 - globalDiscountRate * 100).toFixed(1);
         } else {
             document.getElementById('finalDiscount').innerText = (globalDiscountRate * 10).toFixed(1);
         }
@@ -541,6 +545,8 @@
     }
 
     window.onload = () => {
+        const savedLang = localStorage.getItem('preferred-lang') || 'en';
+        changeLang(savedLang);
         updateUI();
         updateRedeemUI();
     };
