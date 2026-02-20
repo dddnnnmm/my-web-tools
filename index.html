@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,9 +45,9 @@
             
             <!-- Language Selector -->
             <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-sm font-bold">
-                <button onclick="changeLang('zh-Hant')" id="lang-zh-Hant" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">繁體</button>
-                <button onclick="changeLang('zh-Hans')" id="lang-zh-Hans" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">简体</button>
-                <button onclick="changeLang('en')" id="lang-en" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">English</button>
+                <button onclick="changeLang('zh')" id="btn-zh" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">繁</button>
+                <button onclick="changeLang('zh-CN')" id="btn-zh-CN"  class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">简</button>
+                <button onclick="changeLang('en')" id="btn-en" class="btn-lang px-3 py-1.5 rounded-lg text-slate-500 transition-all">EN</button>
             </div>
         </div>
     </nav>
@@ -98,7 +98,7 @@
 
     <script>
         const translations = {
-            'zh-Hant': {
+            'zh': {
                 'hero-title': '簡單、高效的工具集',
                 'hero-desc': '這裡收藏了一些為特定場景開發的小工具，旨在簡化日常計算與操作流程。',
                 'tool1-name': 'Shoppers 積分折扣計算器',
@@ -106,7 +106,7 @@
                 'btn-open': '開啟工具',
                 'coming-soon': '新工具開發中...'
             },
-            'zh-Hans': {
+            'zh-CN': {
                 'hero-title': '简单、高效的工具集',
                 'hero-desc': '这里收藏了一些為特定场景开发的小工具，旨在简化日常计算与操作流程。',
                 'tool1-name': 'Shoppers 积分折扣计算器',

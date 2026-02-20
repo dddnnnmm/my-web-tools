@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -307,8 +307,8 @@
             ciFinal: "Real Cost:",
             ptsPlaceholder: "Bonus pts",
             earnApplied: "20X Applied",
-            earnReached: "Earn Goal Reached",
-            earnMissed: "Missed Goal!",
+            earnReached: "Min Spend Reached",
+            earnMissed: "Total Purchase Less Than Min Spend",
             earnBaseMode: "Base Only",
             custom: "Custom...",
             threshold: "Get {1} pts on ${0}+",
@@ -525,7 +525,7 @@
         document.getElementById('futureTax').innerText = `+$${futureTax.toFixed(2)}`;
         
         if(currentLang === 'en') {
-            document.getElementById('finalDiscount').innerText = (100 - globalDiscountRate * 100).toFixed(1);
+            document.getElementById('finalDiscount').innerText = (100 - globalDiscountRate * 100).toFixed(0);
         } else {
             document.getElementById('finalDiscount').innerText = (globalDiscountRate * 10).toFixed(1);
         }
